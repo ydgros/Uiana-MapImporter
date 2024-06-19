@@ -12,6 +12,8 @@
 #include "Materials/MaterialInstanceConstant.h"
 #include "Rendering/SkeletalMeshLODModel.h"
 #include "Rendering/SkeletalMeshModel.h"
+#include "Engine/SkinnedAssetCommon.h"
+#include "Misc/EngineVersionComparison.h"
 
 
 UObject* UPSKFactory::Import(const FString Filename, UObject* Parent, const FName Name, const EObjectFlags Flags) const
@@ -124,12 +126,14 @@ UObject* UPSKFactory::Import(const FString Filename, UObject* Parent, const FNam
 	}
 	SkeletalMeshImportData.MaxMaterialIndex = SkeletalMeshImportData.Materials.Num()-1;
 
+#if	UE_VERSION_OLDER_THAN(5,3,0)
 	SkeletalMeshImportData.bDiffPose = false;
+	SkeletalMeshImportData.bUseT0AsRefPose = false;
+#endif
 	SkeletalMeshImportData.bHasNormals = Psk.bHasVertexNormals;
 	SkeletalMeshImportData.bHasTangents = false;
 	SkeletalMeshImportData.bHasVertexColors = true;
 	SkeletalMeshImportData.NumTexCoords = 1 + Psk.ExtraUVs.Num(); 
-	SkeletalMeshImportData.bUseT0AsRefPose = false;
 	
 	const auto Skeleton = FActorXUtils::LocalCreate<USkeleton>(USkeleton::StaticClass(), Parent,  Name.ToString().Append("_Skeleton"), Flags);
 
@@ -170,7 +174,11 @@ UObject* UPSKFactory::Import(const FString Filename, UObject* Parent, const FNam
 	SkeletalMesh->SetRefSkeleton(RefSkeleton);
 	SkeletalMesh->CalculateInvRefMatrices();
 
+#if UE_VERSION_OLDER_THAN(5,3,0)  
 	SkeletalMesh->SaveLODImportedData(0, SkeletalMeshImportData);
+#else
+	SkeletalMesh->CommitMeshDescription(0);
+#endif
 	FSkeletalMeshBuildSettings BuildOptions;
 	BuildOptions.bRemoveDegenerates = true;
 	BuildOptions.bRecomputeNormals = !Psk.bHasVertexNormals;
