@@ -9,6 +9,8 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Misc/ScopedSlowTask.h"
 #include "Rendering/SkeletalMeshLODImporterData.h"
+#include "ComponentReregisterContext.h"
+#include "Misc/EngineVersionComparison.h"
 
 UObject* UPSAFactory::Import(const FString Filename, UObject* Parent, const FName Name, const EObjectFlags Flags) const
 {
@@ -28,7 +30,11 @@ UObject* UPSAFactory::Import(const FString Filename, UObject* Parent, const FNam
 
 	auto Info = Psa.AnimInfo;
 	AnimController.SetFrameRate(FFrameRate(Info.AnimRate, 1));
+#if UE_VERSION_OLDER_THAN(5,1,0)  
 	AnimController.SetPlayLength(Info.NumRawFrames/Info.AnimRate);
+#else
+	AnimController.SetNumberOfFrames(Info.NumRawFrames);
+#endif
 	
 	FScopedSlowTask ImportTask(Psa.Bones.Num(), FText::FromString("Importing Anim"));
 	ImportTask.MakeDialog(false);
@@ -52,7 +58,11 @@ UObject* UPSAFactory::Import(const FString Filename, UObject* Parent, const FNam
 			ScaleKeys.Add(Psa.bHasScaleKeys ? Psa.ScaleKeys[KeyIndex].ScaleVector : FVector3f::OneVector);
 		}
 
+#if UE_VERSION_OLDER_THAN(5,2,0)  
 		AnimController.AddBoneTrack(BoneName);
+#else
+		AnimController.AddBoneCurve(BoneName);
+#endif
 		AnimController.SetBoneTrackKeys(BoneName, PositionalKeys, RotationalKeys, ScaleKeys);
 	}
 	AnimController.RemoveBoneTracksMissingFromSkeleton(Skeleton);
