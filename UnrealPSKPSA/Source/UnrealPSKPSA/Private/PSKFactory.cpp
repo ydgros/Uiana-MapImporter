@@ -126,9 +126,11 @@ UObject* UPSKFactory::Import(const FString Filename, UObject* Parent, const FNam
 	}
 	SkeletalMeshImportData.MaxMaterialIndex = SkeletalMeshImportData.Materials.Num()-1;
 
-#if	UE_VERSION_OLDER_THAN(5,3,0)
+#if	UE_VERSION_OLDER_THAN(5,4,0)
 	SkeletalMeshImportData.bDiffPose = false;
 	SkeletalMeshImportData.bUseT0AsRefPose = false;
+#else
+
 #endif
 	SkeletalMeshImportData.bHasNormals = Psk.bHasVertexNormals;
 	SkeletalMeshImportData.bHasTangents = false;
@@ -174,7 +176,7 @@ UObject* UPSKFactory::Import(const FString Filename, UObject* Parent, const FNam
 	SkeletalMesh->SetRefSkeleton(RefSkeleton);
 	SkeletalMesh->CalculateInvRefMatrices();
 
-#if UE_VERSION_OLDER_THAN(5,3,0)  
+#if UE_VERSION_OLDER_THAN(5,4,0)  
 	SkeletalMesh->SaveLODImportedData(0, SkeletalMeshImportData);
 #else
 	SkeletalMesh->CommitMeshDescription(0);
